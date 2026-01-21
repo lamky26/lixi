@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lì Xì Tết Sum Vầy (V6 - Cute Lion & Blossom)</title>
+    <title>Lì Xì Tết Sum Vầy (V8 - Final Custom)</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,35 +26,21 @@
             position: relative;
         }
 
-        /* --- VISUAL EFFECTS: DECORATIONS & PETALS --- */
-        
-        /* 1. Hình ảnh trang trí cố định góc */
+        /* --- VISUAL EFFECTS --- */
         .decor-fixed {
             position: fixed;
             z-index: 0;
             pointer-events: none;
             filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.5));
         }
-        /* Cành đào góc trên phải (MỚI) */
-        .cherry-blossom-top-right {
-            top: 0; right: -20px;
-            width: 300px; /* Điều chỉnh kích thước cành đào */
-            height: auto;
-            opacity: 0.9;
-        }
-        /* Lân GIF góc dưới phải (MỚI) */
         .lion-bottom-right {
-            left: 50%;
-            top: 50%;
-            width: auto;
-            height: 100%;
+            left: 50%; top: 50%;
+            width: auto; height: 100%;
             background-color: transparent;
             object-fit: contain;
-            object-position: center;
             transform: translate(-50%, -50%);
         }
 
-        /* 2. Hiệu ứng hoa đào rơi (Giữ nguyên từ V5) */
         #petal-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 1; overflow: hidden;
@@ -70,7 +56,7 @@
             to { transform: translateY(105vh) rotate(720deg) translateX(50px); opacity: 0; }
         }
 
-        /* --- MAIN CONTAINER STYLE (Giữ nguyên) --- */
+        /* --- MAIN CONTAINER --- */
         h1, h2, h3 { font-family: 'Dancing Script', cursive; color: var(--gold); }
         h1 { font-size: 3em; margin-bottom: 10px; text-shadow: 2px 2px 4px #000; }
 
@@ -120,6 +106,7 @@
         .envelope:hover { transform: scale(1.05) !important;}
         .envelope.opened { background: var(--cream); color: var(--red-dark); cursor: default; border-color: var(--red-dark); transform: translateY(0) scale(1) !important; }
         .envelope.opened .ribbon-band, .envelope.opened .bow { display: none; }
+        .envelope.opened b { font-size: 1.2em; display: block; margin-top: 5px; }
 
         /* Animation & Modal */
         .fly-in-animation { animation: flyIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
@@ -154,6 +141,7 @@
         <button onclick="addPlayerField()">➕ Thêm người chơi</button>
         <br><br>
         <button style="font-size: 22px; padding: 15px 40px;" onclick="startGame()">Vào nhận lì xì thôi! ▶</button>
+        <button style="font-size: 22px; padding: 15px 40px;" onclick="location.href='kyuclixi.html'">Ký ức lì xì 26</button>
     </div>
 
     <div id="screen-game" class="screen">
@@ -181,7 +169,7 @@
 
         <div id="potential-display" class="potential-box" style="display:none;">
             <div>Bạn có thể nhận thêm:</div>
-            <div class="potential-amount">1 - 50 VND</div>
+            <div class="potential-amount">1.000 - 30.000 đ</div>
         </div>
         
         <div id="voting-section" style="display:none;">
@@ -265,7 +253,8 @@
                 env.onclick = () => openEnvelope(index);
             } else {
                 env.classList.add('opened', 'fly-in-animation');
-                env.innerHTML = `<span>${player.name}</span><b style="font-size:1.4em">${player.finalMoney}k</b>`;
+                // Hiển thị đơn vị 000 đ
+                env.innerHTML = `<span>${player.name}</span><b>${player.finalMoney}.000 đ</b>`;
             }
             area.appendChild(env);
         });
@@ -275,19 +264,19 @@
         currentPlayerIndex = index;
         const player = players[index];
 
-        // --- LOGIC XÁC SUẤT MỚI (Yêu cầu: 60% Challenge, 10% Cao, 30% Vừa) ---
+        // --- CẬP NHẬT TỶ LỆ MỚI ---
         let money;
         const chance = Math.random(); // 0.0 - 1.0
         
-        if (chance <= 0.10) { 
-            // 10% cơ hội: Tiền Cao (85 - 100) -> Bị Funny Challenge
-            money = Math.floor(Math.random() * (100 - 85 + 1)) + 85;
-        } else if (chance <= 0.70) { 
-            // 60% tiếp theo (từ 0.1 đến 0.7): Tiền Thấp (1 - 34) -> Được Challenge Me
-            money = Math.floor(Math.random() * 34) + 1;
+        if (chance <= 0.02) { 
+            // 2% cơ hội: Tiền Cao (50 - 60)
+            money = Math.floor(Math.random() * (60 - 50 + 1)) + 50;
+        } else if (chance <= 0.22) { // 2% + 20% = 22%
+            // 20% cơ hội: Tiền Vừa (40 - 49)
+            money = Math.floor(Math.random() * (49 - 40 + 1)) + 40;
         } else {
-            // 30% còn lại: Tiền Vừa (35 - 84) -> Nhận luôn
-            money = Math.floor(Math.random() * (84 - 35 + 1)) + 35;
+            // Còn lại (78%): Tiền Thấp (1 - 39) -> Vào Challenge
+            money = Math.floor(Math.random() * (39 - 1 + 1)) + 1;
         }
 
         player.initialMoney = money;
@@ -296,21 +285,21 @@
         document.body.style.backgroundColor = "#FFFACD";
         setTimeout(() => { document.body.style.backgroundColor = ""; }, 150);
 
-        // Logic Modal (Dựa trên số tiền đã random theo tỷ lệ mới)
-        if (money < 35) {
-            // Case Thấp (60% xảy ra)
+        // Logic Modal hiển thị
+        if (money < 40) {
+            // Nhóm Thấp (1-39): Bắt buộc Challenge
             showModal("CƠ HỘI LỘI NGƯỢC DÒNG", 
-                `Bạn bốc được <b>${money} VND</b>. Hơi ít nhỉ?`, 
+                `Bạn bốc được <b>${money}.000 đ</b>. Hơi ít nhỉ?`, 
                 true, "challenge");
-        } else if (money >= 85) {
-            // Case Cao (10% xảy ra)
+        } else if (money >= 50) {
+            // Nhóm Cao (50-60): Thử thách vui vẻ
             const challenge = funnyChallenges[Math.floor(Math.random() * funnyChallenges.length)];
             showModal("LỘC LỚN PHẢI TẬN HƯỞNG", 
-                `Chúc mừng! Bạn bốc được tận <b>${money} VND</b>.<br>Thực hiện thử thách này để nhận tiền:`, 
+                `Chúc mừng! Bạn bốc được tận <b>${money}.000 đ</b>.<br>Thực hiện thử thách này để nhận tiền:`, 
                 false, "funny", challenge);
         } else {
-            // Case Thường (30% xảy ra)
-            alert(`Chúc mừng ${player.name} nhận được ${money} VND!`);
+            // Nhóm Vừa (40-49): Nhận luôn
+            alert(`Chúc mừng ${player.name} nhận được ${money}.000 đ!`);
             player.completed = true;
             checkEndGame();
         }
@@ -381,10 +370,13 @@
         else { scores.forEach(s => { total += parseInt(s.value); count++; }); }
         
         const avg = total / count;
-        const bonus = Math.round((Math.floor(Math.random() * 50) + 1) * (avg / 10));
+        
+        // --- THƯỞNG THÊM TỪ 1 ĐẾN 30 ---
+        const bonus = Math.round((Math.floor(Math.random() * 30) + 1) * (avg / 10));
+        
         players[currentPlayerIndex].finalMoney += bonus;
         
-        alert(`Điểm TB: ${avg.toFixed(1)}/10. Thưởng thêm: ${bonus} VND.\nTỔNG: ${players[currentPlayerIndex].finalMoney} VND`);
+        alert(`Điểm TB: ${avg.toFixed(1)}/10. Thưởng thêm: ${bonus}.000 đ.\nTỔNG: ${players[currentPlayerIndex].finalMoney}.000 đ`);
         players[currentPlayerIndex].completed = true;
         document.getElementById('modal-challenge').style.display = 'none';
         checkEndGame();
@@ -403,13 +395,12 @@
                 
                 [...players].sort((a, b) => b.finalMoney - a.finalMoney).forEach((p, i) => {
                     let rank = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🎗️');
-                    list.innerHTML += `<li><span>${rank} <b>${p.name}</b></span> <span class="money-highlight">${p.finalMoney} VND</span></li>`;
+                    list.innerHTML += `<li><span>${rank} <b>${p.name}</b></span> <span class="money-highlight">${p.finalMoney}.000 đ</span></li>`;
                 });
             }, 1200);
         }
     }
 
-    // --- TÍNH NĂNG TẢI KẾT QUẢ ---
     function downloadResultTxt() {
         const wish = document.getElementById('random-wish').innerText;
         let content = "=== 🧧 KẾT QUẢ LÌ XÌ TẾT SUM VẦY 🧧 ===\n\n";
@@ -417,7 +408,7 @@
         content += "--- BẢNG XẾP HẠNG ---\n";
         
         [...players].sort((a, b) => b.finalMoney - a.finalMoney).forEach((p, i) => {
-            content += `${i+1}. ${p.name}: ${p.finalMoney} VND\n`;
+            content += `${i+1}. ${p.name}: ${p.finalMoney}.000 đ\n`;
         });
         
         content += "\n--- Happy New Year ---";

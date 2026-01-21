@@ -7,22 +7,24 @@
     <style>
         body { font-family: 'Consolas', monospace; background-color: #111; color: #e0e0e0; padding: 20px; }
         
-        /* Layout */
+        /* Layout Header */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
         
         /* Inputs & Buttons */
         input, button { padding: 8px 12px; margin: 5px 0; background: #222; border: 1px solid #555; color: white; font-family: inherit; }
-        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
-        
-        /* Màu nút bấm theo chức năng */
-        .btn-load { background: #007bff; border-color: #007bff; }
+        button { cursor: pointer; font-weight: bold; transition: 0.2s; border-radius: 4px; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Màu nút bấm */
         .btn-save { background: #28a745; border-color: #28a745; font-size: 16px; padding: 10px 20px; }
+        /* Nút Copy mới */
+        .btn-copy { background: #6c757d; border-color: #6c757d; font-size: 16px; padding: 10px 20px; margin-right: 10px; }
+        
+        .btn-load { background: #007bff; border-color: #007bff; }
         .btn-add { background: #17a2b8; border-color: #17a2b8; }
         .btn-edit { background: #ffc107; color: black; border-color: #ffc107; }
         .btn-del { background: #dc3545; border-color: #dc3545; }
-        
-        button:hover { opacity: 0.8; }
 
         /* Bảng dữ liệu */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
@@ -30,8 +32,7 @@
         th { background: #333; color: #fff; }
         tr:hover { background: #2a2a2a; }
 
-        /* Tiện ích */
-        .status-bar { padding: 10px; background: #333; margin-bottom: 10px; color: yellow; text-align: center; }
+        .status-bar { padding: 10px; background: #333; margin-bottom: 10px; color: yellow; text-align: center; border-radius: 4px; }
         .add-user-box { background: #222; padding: 15px; border: 1px dashed #555; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
     </style>
 </head>
@@ -40,7 +41,10 @@
 <div class="container">
     <div class="header">
         <h1>ADMIN CONTROL PANEL</h1>
-        <button class="btn-save" onclick="saveToCloud()">💾 LƯU THAY ĐỔI LÊN MÂY</button>
+        <div>
+            <button class="btn-copy" onclick="copyToClipboard()">📋 COPY DATA</button>
+            <button class="btn-save" onclick="saveToCloud()">💾 LƯU THAY ĐỔI</button>
+        </div>
     </div>
 
     <div id="status" class="status-bar">Đang chờ kết nối...</div>
@@ -68,20 +72,40 @@
                 <th>Hành động</th>
             </tr>
         </thead>
-        <tbody id="userTableBody">
-            </tbody>
+        <tbody id="userTableBody"></tbody>
     </table>
 </div>
 
 <script>
-    // --- CẤU HÌNH (DÙNG CHUNG VỚI FILE GAME) ---
+    // --- CẤU HÌNH ---
     const BIN_ID = "697120c943b1c97be93fe9ef"; 
     const API_KEY = "$2a$10$ydhdH89Dl8iCYTFsadTlguL.T4QxNH.79JsL62PntdptM1TmcDPKi"; 
-    // -------------------------------------------
+    // ----------------
 
     let users = [];
 
-    // 1. TẢI DỮ LIỆU TỪ JSONBIN
+    // --- CHỨC NĂNG MỚI: COPY TO CLIPBOARD ---
+    async function copyToClipboard() {
+        if (users.length === 0) {
+            alert("Chưa có dữ liệu để copy!");
+            return;
+        }
+        
+        // Chuyển dữ liệu thành chuỗi văn bản đẹp mắt
+        const dataStr = JSON.stringify(users, null, 2);
+        
+        try {
+            // Lệnh copy hiện đại
+            await navigator.clipboard.writeText(dataStr);
+            updateStatus("Đã copy toàn bộ dữ liệu vào bộ nhớ tạm!");
+            alert("Đã COPY thành công! Bạn có thể dán (Ctrl+V) vào Notepad để lưu dự phòng.");
+        } catch (err) {
+            console.error('Lỗi copy:', err);
+            updateStatus("Lỗi không thể copy tự động.");
+        }
+    }
+    // ----------------------------------------
+
     async function loadFromCloud() {
         updateStatus("Đang tải dữ liệu từ server...");
         try {
@@ -93,40 +117,33 @@
             renderTable();
             updateStatus("Đã tải xong dữ liệu! Sẵn sàng chỉnh sửa.");
         } catch (err) {
-            updateStatus("Lỗi kết nối! Kiểm tra lại BIN ID và API Key.");
-            console.error(err);
+            updateStatus("Lỗi kết nối! Kiểm tra lại ID/Key.");
         }
     }
 
-    // 2. LƯU DỮ LIỆU LÊN JSONBIN
     async function saveToCloud() {
-        if(!confirm("Bạn có chắc chắn muốn lưu các thay đổi này lên server không?")) return;
-
+        if(!confirm("Lưu dữ liệu lên mây?")) return;
         updateStatus("Đang đẩy dữ liệu lên mây...");
         try {
             await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Master-Key": API_KEY
-                },
+                headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
                 body: JSON.stringify(users)
             });
-            updateStatus("LƯU THÀNH CÔNG! Người chơi có thể thấy thay đổi ngay.");
+            updateStatus("LƯU THÀNH CÔNG!");
             alert("Đã cập nhật dữ liệu thành công!");
         } catch (err) {
-            updateStatus("Lỗi khi lưu! Vui lòng thử lại.");
+            updateStatus("Lỗi khi lưu!");
         }
     }
 
-    // 3. HIỂN THỊ BẢNG
     function renderTable() {
         const tbody = document.getElementById("userTableBody");
         tbody.innerHTML = "";
         document.getElementById("totalUsers").innerText = users.length;
 
         users.forEach((user, index) => {
-            const row = `
+            tbody.innerHTML += `
                 <tr>
                     <td>${index + 1}</td>
                     <td style="color: #00ff00; font-weight:bold">${user.username}</td>
@@ -134,83 +151,48 @@
                     <td style="color: gold">${parseInt(user.money).toLocaleString()}</td>
                     <td>
                         <button class="btn-edit" onclick="editName(${index})">Sửa Tên</button>
-                        <button class="btn-edit" onclick="editPassword(${index})">Sửa MK</button>
                         <button class="btn-edit" onclick="editMoney(${index})">Sửa Tiền</button>
                         <button class="btn-del" onclick="deleteUser(${index})">Xóa</button>
                     </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
+                </tr>`;
         });
     }
 
-    // 4. CÁC CHỨC NĂNG SỬA ĐỔI (LOGIC)
-    
-    // Thêm người dùng mới
     function addUser() {
         const u = document.getElementById("newUsername").value;
         const p = document.getElementById("newPassword").value;
         const m = document.getElementById("newMoney").value;
-
         if(u && p) {
-            // Kiểm tra trùng tên
-            if(users.some(user => user.username === u)) {
-                alert("Tên đăng nhập này đã tồn tại!");
-                return;
-            }
-
-            users.push({
-                username: u,
-                password: p,
-                money: parseInt(m) || 0
-            });
-            
-            // Xóa trắng ô nhập
+            if(users.some(user => user.username === u)) { alert("Tên tồn tại!"); return; }
+            users.push({ username: u, password: p, money: parseInt(m) || 0 });
             document.getElementById("newUsername").value = "";
             document.getElementById("newPassword").value = "";
             document.getElementById("newMoney").value = "";
-            
             renderTable();
             updateStatus("Đã thêm user mới (Chưa lưu lên server).");
-        } else {
-            alert("Vui lòng nhập Username và Password!");
-        }
+        } else { alert("Thiếu thông tin!"); }
     }
 
-    // Xóa người dùng
     function deleteUser(index) {
-        if(confirm(`Bạn có chắc muốn xóa user: ${users[index].username}?`)) {
+        if(confirm(`Xóa user: ${users[index].username}?`)) {
             users.splice(index, 1);
             renderTable();
-            updateStatus("Đã xóa user (Chưa lưu lên server).");
         }
     }
 
-    // Sửa Tên
     function editName(index) {
-        const newName = prompt("Nhập tên mới:", users[index].username);
+        const newName = prompt("Tên mới:", users[index].username);
         if(newName && newName !== users[index].username) {
             users[index].username = newName;
             renderTable();
         }
     }
 
-    // Sửa Tiền
     function editMoney(index) {
-        const newMoney = prompt(`Nhập số tiền mới cho ${users[index].username}:`, users[index].money);
+        const newMoney = prompt(`Tiền mới cho ${users[index].username}:`, users[index].money);
         if(newMoney !== null) {
             users[index].money = parseInt(newMoney);
             renderTable();
-        }
-    }
-
-    // Sửa Mật khẩu
-    function editPassword(index) {
-        const newPassword = prompt(`Nhập mật khẩu mới cho ${users[index].username}:`, users[index].password);
-        if(newPassword && newPassword !== users[index].password) {
-            users[index].password = newPassword;
-            renderTable();
-            updateStatus("Đã sửa mật khẩu (Chưa lưu lên server).");
         }
     }
 
@@ -218,9 +200,7 @@
         document.getElementById("status").innerText = msg;
     }
 
-    // Tự động load khi mở trang
     loadFromCloud();
-
 </script>
 
 </body>

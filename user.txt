@@ -1,0 +1,52 @@
+[
+  {
+    "username": "admin",
+    "password": "2803",
+    "money": 0
+  },
+  {
+    "username": "Quỹ ăn uống",
+    "password": "adim",
+    "money": 30000
+  },
+  {
+    "username": "Quỹ từ thiện",
+    "password": "admin",
+    "money": 5000
+  },
+  {
+    "username": "Nam",
+    "password": "admin",
+    "money": 0
+  },
+  {
+    "username": "Lâm",
+    "password": "1111",
+    "money": 0
+  },
+  {
+    "username": "Hương",
+    "password": "1111",
+    "money": 0
+  },
+  {
+    "username": "Diệp",
+    "password": "1111",
+    "money": 0
+  },
+  {
+    "username": "Phúc",
+    "password": "1111",
+    "money": 0
+  },
+  {
+    "username": "Chúc",
+    "password": "1111",
+    "money": 0
+  },
+  {
+    "username": "Doanh",
+    "password": "1111",
+    "money": 0
+  }
+]
