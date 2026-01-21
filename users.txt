@@ -1,0 +1,2 @@
+    const BIN_ID = "697120c943b1c97be93fe9ef"; 
+    const API_KEY = "$2a$10$ydhdH89Dl8iCYTFsadTlguL.T4QxNH.79JsL62PntdptM1TmcDPKi"; 

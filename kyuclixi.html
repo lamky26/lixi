@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ký ức lì xì 26</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background-color: #1a1a1a; color: #00ff00; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #2d2d2d; padding: 30px; border: 2px solid #00ff00; border-radius: 10px; width: 400px; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
+        
+        input, button { width: 100%; padding: 10px; margin: 10px 0; background: #000; border: 1px solid #555; color: white; box-sizing: border-box; }
+        button { background: #006400; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #00ff00; color: black; }
+        
+        .hidden { display: none; }
+        .loading { color: yellow; text-align: center; font-size: 14px; margin-bottom: 10px; }
+        
+        /* CSS cho danh sách người chơi */
+        .user-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 12px; 
+            border-bottom: 1px solid #444; 
+            align-items: center; 
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-money {
+            font-size: 12px;
+            color: #ffd700; /* Màu vàng kim loại */
+            margin-top: 4px;
+        }
+        .btn-send {
+            width: auto; 
+            margin: 0; 
+            padding: 5px 15px; 
+            font-size: 12px;
+            background: #007bff;
+            border-color: #0056b3;
+        }
+        .btn-send:hover { background: #3399ff; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="loginScreen">
+        <h2 style="text-align: center">GAME SERVER</h2>
+        <div id="status" class="loading">Đang kết nối đến máy chủ...</div>
+        
+        <div id="loginForm" class="hidden">
+            <input type="text" id="username" placeholder="Tên đăng nhập">
+            <input type="password" id="password" placeholder="Mật khẩu">
+            <button onclick="login()">Đăng Nhập</button>
+        </div>
+        <button id="btnReload" onclick="loadDataFromCloud()" style="background:#333; border-color:#555">🔄 Tải lại dữ liệu</button>
+    </div>
+
+    <div id="dashboardScreen" class="hidden">
+        <h3>User: <span id="displayName" style="color: white;"></span></h3>
+        <h1 style="text-align: center; color: #ffd700; text-shadow: 1px 1px 0 #000;">
+            <span id="displayMoney">0</span> $
+        </h1>
+
+        <h4>Danh sách người chơi:</h4>
+        <div id="playerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #444;"></div>
+        
+        <hr style="border-color: #444;">
+        <button onclick="logout()" style="background: #b22222; border-color: red;">Đăng xuất</button>
+    </div>
+
+</div>
+
+<script>
+    // --- CẤU HÌNH JSONBIN (ĐIỀN LẠI THÔNG TIN CỦA BẠN VÀO ĐÂY) ---
+    const BIN_ID = "697120c943b1c97be93fe9ef"; 
+    const API_KEY = "$2a$10$ydhdH89Dl8iCYTFsadTlguL.T4QxNH.79JsL62PntdptM1TmcDPKi"; 
+    // -------------------------------------------------------------
+
+    let users = [];
+    let currentUserIndex = -1;
+
+    // 1. TẢI DỮ LIỆU TỪ MẠNG
+    async function loadDataFromCloud() {
+        document.getElementById('status').innerText = "Đang tải dữ liệu...";
+        try {
+            let req = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { "X-Master-Key": API_KEY }
+            });
+            let json = await req.json();
+            users = json.record; 
+            
+            document.getElementById('status').innerText = "Máy chủ sẵn sàng!";
+            document.getElementById('loginForm').classList.remove('hidden');
+        } catch (err) {
+            document.getElementById('status').innerText = "Lỗi kết nối! Kiểm tra lại ID/Key.";
+            console.error(err);
+        }
+    }
+
+    // 2. LƯU DỮ LIỆU LÊN MẠNG
+    async function saveDataToCloud() {
+        document.getElementById('status').innerText = "Đang lưu giao dịch...";
+        try {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": API_KEY
+                },
+                body: JSON.stringify(users)
+            });
+            alert("Chuyển tiền thành công!");
+        } catch (err) {
+            alert("Lỗi mạng! Số tiền có thể chưa được lưu.");
+        }
+    }
+
+    // 3. ĐĂNG NHẬP
+    function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const index = users.findIndex(user => user.username === u && user.password === p);
+
+        if (index !== -1) {
+            currentUserIndex = index;
+            showDashboard();
+        } else {
+            alert("Sai tài khoản hoặc mật khẩu!");
+        }
+    }
+
+    // 4. HIỂN THỊ GIAO DIỆN (ĐÃ CẬP NHẬT PHẦN HIỂN THỊ TIỀN)
+    function showDashboard() {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('dashboardScreen').classList.remove('hidden');
+        updateUI();
+    }
+
+    function updateUI() {
+        const me = users[currentUserIndex];
+        document.getElementById('displayName').innerText = me.username;
+        document.getElementById('displayMoney').innerText = parseInt(me.money).toLocaleString();
+        
+        const listDiv = document.getElementById('playerList');
+        listDiv.innerHTML = "";
+        
+        users.forEach((user, index) => {
+            if (index !== currentUserIndex) {
+                // ĐÂY LÀ PHẦN THAY ĐỔI: Thêm thẻ hiển thị số tiền
+                listDiv.innerHTML += `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <span style="font-weight:bold">${user.username}</span>
+                            <span class="user-money">Tài sản: ${parseInt(user.money).toLocaleString()} $</span>
+                        </div>
+                        <button class="btn-send" onclick="transfer(${index})">Gửi tiền</button>
+                    </div>`;
+            }
+        });
+    }
+
+    // 5. CHUYỂN TIỀN
+    async function transfer(receiverIndex) {
+        // Tải lại data mới nhất trước khi chuyển để tránh lỗi số dư ảo
+        await loadDataFromCloud(); 
+        
+        // Cập nhật lại vị trí người chơi hiện tại (đề phòng thứ tự mảng bị thay đổi)
+        const currentName = document.getElementById('displayName').innerText;
+        currentUserIndex = users.findIndex(u => u.username === currentName);
+
+        const receiver = users[receiverIndex];
+        const me = users[currentUserIndex];
+
+        let amount = prompt(`Gửi bao nhiêu cho ${receiver.username}?`);
+        if (!amount) return;
+        amount = parseInt(amount);
+
+        if (amount > 0 && amount <= me.money) {
+            me.money -= amount;
+            receiver.money += amount;
+            
+            updateUI(); // Cập nhật số dư trên màn hình ngay
+            await saveDataToCloud(); // Đẩy lên server
+        } else {
+            alert("Số dư không đủ hoặc nhập sai!");
+        }
+    }
+
+    function logout() { location.reload(); }
+
+    loadDataFromCloud();
+</script>
+
+</body>
+</html>

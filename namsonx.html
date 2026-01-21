@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PANEL - Quản Lý Game</title>
+    <style>
+        body { font-family: 'Consolas', monospace; background-color: #111; color: #e0e0e0; padding: 20px; }
+        
+        /* Layout */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* Inputs & Buttons */
+        input, button { padding: 8px 12px; margin: 5px 0; background: #222; border: 1px solid #555; color: white; font-family: inherit; }
+        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
+        
+        /* Màu nút bấm theo chức năng */
+        .btn-load { background: #007bff; border-color: #007bff; }
+        .btn-save { background: #28a745; border-color: #28a745; font-size: 16px; padding: 10px 20px; }
+        .btn-add { background: #17a2b8; border-color: #17a2b8; }
+        .btn-edit { background: #ffc107; color: black; border-color: #ffc107; }
+        .btn-del { background: #dc3545; border-color: #dc3545; }
+        
+        button:hover { opacity: 0.8; }
+
+        /* Bảng dữ liệu */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
+        th, td { border: 1px solid #333; padding: 12px; text-align: left; }
+        th { background: #333; color: #fff; }
+        tr:hover { background: #2a2a2a; }
+
+        /* Tiện ích */
+        .status-bar { padding: 10px; background: #333; margin-bottom: 10px; color: yellow; text-align: center; }
+        .add-user-box { background: #222; padding: 15px; border: 1px dashed #555; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>ADMIN CONTROL PANEL</h1>
+        <button class="btn-save" onclick="saveToCloud()">💾 LƯU THAY ĐỔI LÊN MÂY</button>
+    </div>
+
+    <div id="status" class="status-bar">Đang chờ kết nối...</div>
+
+    <div class="add-user-box">
+        <h3>+ Thêm User:</h3>
+        <input type="text" id="newUsername" placeholder="Username">
+        <input type="text" id="newPassword" placeholder="Password">
+        <input type="number" id="newMoney" placeholder="Tiền (VND)">
+        <button class="btn-add" onclick="addUser()">Tạo Mới</button>
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        <button class="btn-load" onclick="loadFromCloud()">🔄 Tải lại dữ liệu mới nhất</button>
+        <span>(Tổng: <b id="totalUsers">0</b> người chơi)</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên đăng nhập</th>
+                <th>Mật khẩu</th>
+                <th>Tài sản (VND)</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // --- CẤU HÌNH (DÙNG CHUNG VỚI FILE GAME) ---
+    const BIN_ID = "697120c943b1c97be93fe9ef"; 
+    const API_KEY = "$2a$10$ydhdH89Dl8iCYTFsadTlguL.T4QxNH.79JsL62PntdptM1TmcDPKi"; 
+    // -------------------------------------------
+
+    let users = [];
+
+    // 1. TẢI DỮ LIỆU TỪ JSONBIN
+    async function loadFromCloud() {
+        updateStatus("Đang tải dữ liệu từ server...");
+        try {
+            let req = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { "X-Master-Key": API_KEY }
+            });
+            let json = await req.json();
+            users = json.record;
+            renderTable();
+            updateStatus("Đã tải xong dữ liệu! Sẵn sàng chỉnh sửa.");
+        } catch (err) {
+            updateStatus("Lỗi kết nối! Kiểm tra lại BIN ID và API Key.");
+            console.error(err);
+        }
+    }
+
+    // 2. LƯU DỮ LIỆU LÊN JSONBIN
+    async function saveToCloud() {
+        if(!confirm("Bạn có chắc chắn muốn lưu các thay đổi này lên server không?")) return;
+
+        updateStatus("Đang đẩy dữ liệu lên mây...");
+        try {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": API_KEY
+                },
+                body: JSON.stringify(users)
+            });
+            updateStatus("LƯU THÀNH CÔNG! Người chơi có thể thấy thay đổi ngay.");
+            alert("Đã cập nhật dữ liệu thành công!");
+        } catch (err) {
+            updateStatus("Lỗi khi lưu! Vui lòng thử lại.");
+        }
+    }
+
+    // 3. HIỂN THỊ BẢNG
+    function renderTable() {
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "";
+        document.getElementById("totalUsers").innerText = users.length;
+
+        users.forEach((user, index) => {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td style="color: #00ff00; font-weight:bold">${user.username}</td>
+                    <td>${user.password}</td>
+                    <td style="color: gold">${parseInt(user.money).toLocaleString()}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editName(${index})">Sửa Tên</button>
+                        <button class="btn-edit" onclick="editPassword(${index})">Sửa MK</button>
+                        <button class="btn-edit" onclick="editMoney(${index})">Sửa Tiền</button>
+                        <button class="btn-del" onclick="deleteUser(${index})">Xóa</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // 4. CÁC CHỨC NĂNG SỬA ĐỔI (LOGIC)
+    
+    // Thêm người dùng mới
+    function addUser() {
+        const u = document.getElementById("newUsername").value;
+        const p = document.getElementById("newPassword").value;
+        const m = document.getElementById("newMoney").value;
+
+        if(u && p) {
+            // Kiểm tra trùng tên
+            if(users.some(user => user.username === u)) {
+                alert("Tên đăng nhập này đã tồn tại!");
+                return;
+            }
+
+            users.push({
+                username: u,
+                password: p,
+                money: parseInt(m) || 0
+            });
+            
+            // Xóa trắng ô nhập
+            document.getElementById("newUsername").value = "";
+            document.getElementById("newPassword").value = "";
+            document.getElementById("newMoney").value = "";
+            
+            renderTable();
+            updateStatus("Đã thêm user mới (Chưa lưu lên server).");
+        } else {
+            alert("Vui lòng nhập Username và Password!");
+        }
+    }
+
+    // Xóa người dùng
+    function deleteUser(index) {
+        if(confirm(`Bạn có chắc muốn xóa user: ${users[index].username}?`)) {
+            users.splice(index, 1);
+            renderTable();
+            updateStatus("Đã xóa user (Chưa lưu lên server).");
+        }
+    }
+
+    // Sửa Tên
+    function editName(index) {
+        const newName = prompt("Nhập tên mới:", users[index].username);
+        if(newName && newName !== users[index].username) {
+            users[index].username = newName;
+            renderTable();
+        }
+    }
+
+    // Sửa Tiền
+    function editMoney(index) {
+        const newMoney = prompt(`Nhập số tiền mới cho ${users[index].username}:`, users[index].money);
+        if(newMoney !== null) {
+            users[index].money = parseInt(newMoney);
+            renderTable();
+        }
+    }
+
+    // Sửa Mật khẩu
+    function editPassword(index) {
+        const newPassword = prompt(`Nhập mật khẩu mới cho ${users[index].username}:`, users[index].password);
+        if(newPassword && newPassword !== users[index].password) {
+            users[index].password = newPassword;
+            renderTable();
+            updateStatus("Đã sửa mật khẩu (Chưa lưu lên server).");
+        }
+    }
+
+    function updateStatus(msg) {
+        document.getElementById("status").innerText = msg;
+    }
+
+    // Tự động load khi mở trang
+    loadFromCloud();
+
+</script>
+
+</body>
+</html>
