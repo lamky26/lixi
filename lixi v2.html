@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lì Xì Tết Sum Vầy Online (V3)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red-dark: #8E0000;
+            --red-bright: #D32F2F;
+            --gold: #FFD700;
+            --gold-dark: #B8860B;
+            --cream: #FFF8E7;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--red-dark);
+            background-image: radial-gradient(var(--gold) 1px, transparent 1px), radial-gradient(var(--gold) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            color: var(--cream);
+            margin: 0; padding: 20px; text-align: center;
+            min-height: 100vh; box-sizing: border-box;
+        }
+        h1, h2, h3 { font-family: 'Dancing Script', cursive; color: var(--gold); }
+        h1 { font-size: 3em; margin-bottom: 10px; text-shadow: 2px 2px 4px #000; }
+
+        .container {
+            max-width: 650px; margin: 20px auto;
+            background: rgba(142, 0, 0, 0.9);
+            padding: 30px; border: 4px solid var(--gold); border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        
+        .input-group { margin-bottom: 15px; }
+        input {
+            padding: 12px; border-radius: 8px; border: 2px solid var(--gold-dark);
+            background: var(--cream); color: var(--red-dark);
+            font-weight: bold; font-size: 1.1em; width: 80%; text-align: center;
+        }
+        button {
+            background: linear-gradient(to bottom, var(--gold), var(--gold-dark));
+            color: var(--red-dark); border: none; padding: 12px 30px;
+            font-size: 18px; font-weight: bold; border-radius: 30px;
+            cursor: pointer; margin: 10px; box-shadow: 0 5px 0 #8c6608;
+            font-family: 'Nunito', sans-serif; transition: all 0.2s;
+        }
+        button:active { transform: translateY(5px); box-shadow: none; }
+
+        /* --- ENVELOPE STYLES & BOW (CHIẾC NƠ) --- */
+        .envelopes-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin-top: 30px; }
+        
+        .envelope {
+            width: 120px; height: 170px;
+            background: var(--red-bright);
+            border: 2px solid var(--gold); border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            padding-bottom: 20px;
+            cursor: pointer; position: relative;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            transform: translateY(150px); opacity: 0;
+            transition: transform 0.3s;
+            overflow: hidden; /* Để cắt phần nơ thừa nếu có */
+        }
+        
+        /* Dải dây ngang */
+        .ribbon-band {
+            position: absolute; top: 35%; left: 0; width: 100%; height: 15px;
+            background: var(--gold);
+            border-top: 1px solid var(--gold-dark); border-bottom: 1px solid var(--gold-dark);
+            z-index: 1;
+        }
+        
+        /* Tạo hình chiếc nơ bằng CSS */
+        .bow {
+            position: absolute; top: 35%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px; height: 40px;
+            z-index: 2; pointer-events: none;
+        }
+        /* Cánh nơ trái */
+        .bow::before {
+            content: ''; position: absolute; left: 0; top: 0;
+            width: 40px; height: 40px;
+            background: radial-gradient(circle at center, var(--gold) 40%, var(--gold-dark) 100%);
+            border-radius: 50% 0 0 50%;
+            transform: skewY(15deg);
+            box-shadow: -2px 2px 2px rgba(0,0,0,0.2);
+        }
+        /* Cánh nơ phải */
+        .bow::after {
+            content: ''; position: absolute; right: 0; top: 0;
+            width: 40px; height: 40px;
+            background: radial-gradient(circle at center, var(--gold) 40%, var(--gold-dark) 100%);
+            border-radius: 0 50% 50% 0;
+            transform: skewY(-15deg);
+            box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+        }
+        /* Nút thắt giữa nơ */
+        .bow-knot {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 15px; height: 15px;
+            background: var(--cream);
+            border-radius: 50%;
+            border: 2px solid var(--gold-dark);
+            z-index: 3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .envelope span { z-index: 3; font-weight: bold; font-size: 1.1em; text-shadow: 1px 1px 2px #000; margin-top: 5px; }
+        .envelope:hover { transform: scale(1.05) !important;}
+
+        .envelope.opened {
+            background: var(--cream); color: var(--red-dark); cursor: default; border-color: var(--red-dark);
+            transform: translateY(0) scale(1) !important;
+        }
+        .envelope.opened .ribbon-band, .envelope.opened .bow, .envelope.opened .bow-knot { display: none; } /* Ẩn nơ khi mở */
+        .envelope.opened span { margin-top: 0; text-shadow: none; color: var(--red-dark); font-size: 1.3em;}
+
+        /* Animations & Modals */
+        .fly-in-animation { animation: flyIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes flyIn { to { opacity: 1; transform: translateY(0); } }
+        
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-content {
+            background: var(--cream); color: var(--red-dark); border: 4px solid var(--gold);
+            padding: 25px; width: 90%; max-width: 450px; border-radius: 15px; text-align: center;
+        }
+        .challenge-text {
+            font-size: 1.3em; font-weight: bold; padding: 15px; background: rgba(255, 215, 0, 0.2); border-radius: 10px; margin: 15px 0;
+        }
+        .voting-area { text-align: left; margin-top: 15px; max-height: 200px; overflow-y: auto; padding: 10px; background: #fff; border-radius: 8px;}
+        .vote-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; font-weight: bold;}
+        
+        #result-list li {
+            background: rgba(255, 215, 0, 0.2); margin: 8px 0; padding: 10px; border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .money-highlight { color: var(--gold); font-weight: bold; font-size: 1.4em; font-family: 'Dancing Script';}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="screen-intro" class="screen active">
+        <h1>🧧 Lì Xì Đầu Xuân 🧧</h1>
+        <div id="player-inputs">
+            <div class="input-group"><input type="text" placeholder="Nhập tên người chơi 1..."></div>
+            <div class="input-group"><input type="text" placeholder="Nhập tên người chơi 2..."></div>
+        </div>
+        <button onclick="addPlayerField()">➕ Thêm người chơi</button>
+        <br><br>
+        <button style="font-size: 22px; padding: 15px 40px;" onclick="startGame()">Vào nhận lì xì thôi! ▶</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h2>Chọn Hộp Quà May Mắn</h2>
+        <div class="envelopes-area" id="envelopes-area"></div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <h1>🎉 Tổng Kết Lì Xì 🎉</h1>
+        <h3 id="random-wish" style="color: var(--cream); font-style: italic;"></h3>
+        <ul id="result-list" style="list-style: none; padding: 0;"></ul>
+        <button onclick="location.reload()">Chơi lại từ đầu 🔄</button>
+    </div>
+</div>
+
+<div id="modal-challenge" class="modal">
+    <div class="modal-content">
+        <h3 id="challenge-title">THỬ THÁCH</h3>
+        <div id="challenge-content-area"></div>
+        
+        <div id="voting-section" style="display:none;">
+            <hr>
+            <p>👨‍👩‍👧‍👦 Chấm điểm (Thang 10):</p>
+            <div id="voters-list" class="voting-area"></div>
+        </div>
+
+        <button id="btn-challenge-action" onclick="handleChallengeAction()">Hoàn thành</button>
+    </div>
+</div>
+
+<script>
+    const emotionalChallenges = [
+        "Ôm người bên trái thật chặt trong 10s.", "Khen ngợi kiểu tóc/trang phục của 3 người.",
+        "Nói lời cảm ơn chân thành tới người lớn tuổi nhất.", "Nhắn tin 'Con yêu Bố/Mẹ' ngay lập tức.",
+        "Kể một kỷ niệm vui với người ngồi đối diện.", "Bắt tay chúc tết từng người trong phòng."
+    ];
+    const funnyChallenges = [
+        "Múa quạt hoặc nhảy Trend Tiktok bất kỳ.", "Làm mặt xấu trong 10s để mọi người chụp ảnh.",
+        "Vừa nhảy lò cò vừa hát 'Happy New Year'.", "Giả tiếng mèo kêu chúc tết mọi người.",
+        "Đi catwalk từ đầu phòng đến cuối phòng.", "Giữ thăng bằng cái thìa trên mũi 10s."
+    ];
+    const wishes = [
+        "Tiền vào như nước sông Đà!", "Vạn sự như ý, tỷ sự như mơ!", 
+        "Sức khỏe vô biên, kiếm được nhiều tiền!", "Tấn tài tấn lộc tấn bình an."
+    ];
+
+    let players = [];
+    let currentPlayerIndex = -1;
+
+    function addPlayerField() {
+        const div = document.createElement('div');
+        div.className = 'input-group';
+        div.innerHTML = `<input type="text" placeholder="Tên người chơi ${document.querySelectorAll('#player-inputs input').length + 1}...">`;
+        document.getElementById('player-inputs').appendChild(div);
+    }
+
+    function startGame() {
+        const inputs = document.querySelectorAll('#player-inputs input');
+        players = [];
+        inputs.forEach(input => {
+            if (input.value.trim() !== "") players.push({ name: input.value.trim(), initialMoney: 0, finalMoney: 0, completed: false });
+        });
+        if (players.length < 1) return alert("Vui lòng nhập tên người chơi!");
+        
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-game').classList.add('active');
+        renderEnvelopes();
+    }
+
+    function renderEnvelopes() {
+        const area = document.getElementById('envelopes-area');
+        area.innerHTML = '';
+        players.forEach((player, index) => {
+            const env = document.createElement('div');
+            env.className = 'envelope';
+            setTimeout(() => { env.classList.add('fly-in-animation'); }, index * 150);
+            
+            if (!player.completed) {
+                // Render nơ và dây
+                env.innerHTML = `
+                    <div class="ribbon-band"></div>
+                    <div class="bow"><div class="bow-knot"></div></div>
+                    <span>${player.name}</span>
+                `;
+                env.onclick = () => openEnvelope(index);
+            } else {
+                env.classList.add('opened', 'fly-in-animation');
+                env.innerHTML = `<span>${player.name}</span><b style="font-size:1.4em">${player.finalMoney}k</b>`;
+            }
+            area.appendChild(env);
+        });
+    }
+
+    function openEnvelope(index) {
+        currentPlayerIndex = index;
+        const player = players[index];
+
+        // --- LOGIC XÁC SUẤT MỚI (10% cơ hội cho 85-100) ---
+        let money;
+        const chance = Math.random(); // 0.0 - 1.0
+        
+        if (chance <= 0.10) { 
+            // 10% cơ hội rơi vào khoảng 85 - 100
+            money = Math.floor(Math.random() * (100 - 85 + 1)) + 85;
+        } else {
+            // 90% cơ hội rơi vào khoảng 1 - 84
+            money = Math.floor(Math.random() * 84) + 1;
+        }
+
+        player.initialMoney = money;
+        player.finalMoney = money; 
+        
+        // Hiệu ứng chớp
+        document.body.style.backgroundColor = "#FFFACD";
+        setTimeout(() => { document.body.style.backgroundColor = ""; }, 150);
+
+        // --- LUẬT CHƠI MỚI (< 35 ĐƯỢC CHALLENGE) ---
+        if (money < 35) {
+            // Case Thấp: Được quyền thử thách
+            showModal("CƠ HỘI LỘI NGƯỢC DÒNG", 
+                `Bạn bốc được <b>${money} VND</b>. <br>Hơi ít nhỉ? Bạn có muốn làm thử thách để nhận thêm tiền không?`, 
+                true, "challenge");
+        } else if (money >= 85) {
+            // Case Cao: Bắt buộc thử thách
+            const challenge = funnyChallenges[Math.floor(Math.random() * funnyChallenges.length)];
+            showModal("LỘC LỚN PHẢI TẬN HƯỞNG", 
+                `Chúc mừng! Bạn bốc được tận <b>${money} VND</b>.<br>Thực hiện ngay thử thách vui này để nhận tiền:`, 
+                false, "funny", challenge);
+        } else {
+            // Case Trung bình
+            alert(`Chúc mừng ${player.name} nhận được ${money} VND!`);
+            player.completed = true;
+            checkEndGame();
+        }
+    }
+
+    function showModal(title, introText, isVoting, type, specificContent = null) {
+        const modal = document.getElementById('modal-challenge');
+        document.getElementById('challenge-title').innerText = title;
+        document.getElementById('challenge-content-area').innerHTML = `<p>${introText}</p>` + (specificContent ? `<div class="challenge-text">${specificContent}</div>` : '');
+        
+        const votingSection = document.getElementById('voting-section');
+        const btn = document.getElementById('btn-challenge-action');
+        votingSection.style.display = 'none';
+        
+        btn.onclick = () => handleChallengeAction(type);
+        btn.innerText = type === "challenge" ? "🔥 Chấp nhận thử thách!" : "✅ Đã xong, nhận tiền!";
+        modal.style.display = 'flex';
+    }
+
+    function handleChallengeAction(type) {
+        if (type === "challenge") {
+            const challenge = emotionalChallenges[Math.floor(Math.random() * emotionalChallenges.length)];
+            document.getElementById('challenge-content-area').innerHTML = `<p>Thử thách của bạn là:</p><div class="challenge-text">${challenge}</div>`;
+            
+            const votersDiv = document.getElementById('voters-list');
+            votersDiv.innerHTML = '';
+            const otherPlayers = players.filter((_, i) => i !== currentPlayerIndex);
+            
+            if (otherPlayers.length === 0) votersDiv.innerHTML = "<i>Chơi một mình thì máy tự chấm 10 điểm nhé!</i>";
+            else {
+                otherPlayers.forEach(p => {
+                    votersDiv.innerHTML += `
+                        <div class="vote-row"><span>${p.name}:</span>
+                        <select class="vote-score">
+                            <option value="10">10 (Tuyệt vời)</option><option value="9">9 (Tuyệt)</option>
+                            <option value="8">8 (Tốt)</option><option value="7">7 (khá)</option>
+                            <option value="6">6 (Cũng đk)</option><option value="5">5 (Tạm)</option>
+                            <option value="4">4 (chán đời)</option><option value="3">3 (đi ỉa mượt hơn)</option>
+                            <option value="2">2 (ẹc)</option><option value="1">1 (khỏi chấm bay ơi)</option>
+                        </select></div>`;
+                });
+            }
+            document.getElementById('voting-section').style.display = 'block';
+            const btn = document.getElementById('btn-challenge-action');
+            btn.innerText = "Chấm điểm & Nhận thưởng";
+            btn.onclick = calculateChallengeResult;
+        } else {
+            players[currentPlayerIndex].completed = true;
+            document.getElementById('modal-challenge').style.display = 'none';
+            checkEndGame();
+        }
+    }
+
+    function calculateChallengeResult() {
+        const scores = document.querySelectorAll('.vote-score');
+        let total = 0, count = 0;
+        if (scores.length === 0) { total = 10; count = 1; }
+        else { scores.forEach(s => { total += parseInt(s.value); count++; }); }
+        
+        const avg = total / count;
+        const bonus = Math.round((Math.floor(Math.random() * 50) + 1) * (avg / 10));
+        players[currentPlayerIndex].finalMoney += bonus;
+        
+        alert(`Điểm TB: ${avg.toFixed(1)}/10. Thưởng thêm: ${bonus} VND.\nTỔNG: ${players[currentPlayerIndex].finalMoney} VND`);
+        players[currentPlayerIndex].completed = true;
+        document.getElementById('modal-challenge').style.display = 'none';
+        checkEndGame();
+    }
+
+    function checkEndGame() {
+        renderEnvelopes();
+        if (players.every(p => p.completed && players.length > 0)) {
+            setTimeout(() => {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById('screen-result').classList.add('active');
+                
+                const list = document.getElementById('result-list');
+                list.innerHTML = '';
+                document.getElementById('random-wish').innerText = `"${wishes[Math.floor(Math.random() * wishes.length)]}"`;
+                
+                [...players].sort((a, b) => b.finalMoney - a.finalMoney).forEach((p, i) => {
+                    let rank = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🎗️');
+                    list.innerHTML += `<li><span>${rank} <b>${p.name}</b></span> <span class="money-highlight">${p.finalMoney} VND</span></li>`;
+                });
+            }, 1200);
+        }
+    }
+</script>
+
+</body>
+</html>
