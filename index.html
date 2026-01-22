@@ -118,6 +118,9 @@
         .modal-content { background: var(--cream); color: var(--red-dark); border: 4px solid var(--gold); padding: 25px; width: 90%; max-width: 450px; border-radius: 15px; text-align: center; }
         .potential-box { background: #fff; border: 2px dashed var(--red-dark); padding: 10px; margin: 15px 0; border-radius: 10px; }
         .potential-amount { font-size: 1.5em; color: var(--gold-dark); font-weight: bold; }
+        .btn-challenge-green { background: linear-gradient(to bottom, #4CAF50, #2e7d32) !important; color: white !important; box-shadow: 0 5px 0 #1b5e20 !important; }
+        .btn-challenge-green:disabled { background: linear-gradient(to bottom, #9ccc65, #558b2f) !important; cursor: not-allowed !important; opacity: 0.7 !important; }
+        .btn-challenge-green:active:not(:disabled) { transform: translateY(5px); box-shadow: none !important; }
         .challenge-text { font-size: 1.3em; font-weight: bold; padding: 15px; background: rgba(255, 215, 0, 0.2); border-radius: 10px; margin: 15px 0; }
         .voting-area { text-align: left; margin-top: 15px; max-height: 200px; overflow-y: auto; padding: 10px; background: #fff; border-radius: 8px;}
         .vote-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; font-weight: bold;}
@@ -207,7 +210,7 @@
     setInterval(createPetal, 300);
 
     // --- GAME LOGIC ---
-    const emotionalChallenges = ["Ôm người bên trái 10s.", "Khen 3 người trong phòng.", "Chúc tết người lớn tuổi nhất.", "Nhắn tin 'Con yêu Bố/Mẹ'.", "Kể kỷ niệm vui.", "Bắt tay chúc tết từng người."];
+    const emotionalChallenges = ["Ôm vòng tay qua người đứng cạnh bên trái của bạn trong 10s.", "Khen 5 người trong phòng.", "Chúc tết và bóp chân người lớn tuổi nhất trong 20s.", "Nhắn tin 'Con yêu Bố/Mẹ lắm cho con xin 5 chục uống nước :p'.", "Kể về lần gần nhất mà bạn được tăng hoa, kèm tên viết tắt của người đó.", "Bắt tay chúc tết từng người có mặt trong nhà bạn.","ôm chân người đang đứng bên phải bạn trong 10s","hãy lì xì cho ai đó trên ứng dụng này 10.000đ.","hãy cầu xin ai đó gửi cho mình 20.000đ trên ứng dụng này đi nào (chấp nhận nhiều người)."];
     const funnyChallenges = ["Múa quạt.", "Làm mặt xấu 10s.", "Nhảy lò cò.", "Giả tiếng mèo.", "Đi catwalk.", "Giữ thìa trên mũi."];
     const wishes = ["Tiền vào như nước sông Đà!", "Vạn sự như ý!", "Sức khỏe vô biên!", "Tấn tài tấn lộc."];
 
@@ -287,7 +290,7 @@
         
         if (type === "challenge") {
             potentialDisplay.style.display = 'block';
-            btn.innerText = "🔥 Chấp nhận thử thách!";
+            btn.innerText = "🔥 Challenge Me!";
         } else {
             potentialDisplay.style.display = 'none';
             btn.innerText = "✅ Đã xong, nhận tiền!";
@@ -318,12 +321,36 @@
                 });
             }
             document.getElementById('voting-section').style.display = 'block';
-            document.getElementById('btn-challenge-action').onclick = calculateChallengeResult;
+            
+            // Đổi nút sang xanh, disable và countdown 30s
+            const btn = document.getElementById('btn-challenge-action');
+            btn.innerText = "✅ Hoàn thành";
+            btn.classList.add('btn-challenge-green');
+            btn.disabled = true;
+            startCountdown(30, btn);
+            btn.onclick = calculateChallengeResult;
         } else {
             players[currentPlayerIndex].completed = true;
             document.getElementById('modal-challenge').style.display = 'none';
             checkEndGame();
         }
+    }
+
+    function startCountdown(seconds, btn) {
+        let remaining = seconds;
+        const originalText = btn.innerText;
+        btn.innerText = `⏳ ${remaining}s`;
+        
+        const interval = setInterval(() => {
+            remaining--;
+            btn.innerText = `⏳ ${remaining}s`;
+            
+            if (remaining === 0) {
+                clearInterval(interval);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }, 1000);
     }
 
     function calculateChallengeResult() {
