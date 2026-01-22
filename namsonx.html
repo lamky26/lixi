@@ -151,6 +151,7 @@
                     <td style="color: gold">${parseInt(user.money).toLocaleString()}</td>
                     <td>
                         <button class="btn-edit" onclick="editName(${index})">Sửa Tên</button>
+                        <button class="btn-edit" onclick="editPassword(${index})">Sửa MK</button>
                         <button class="btn-edit" onclick="editMoney(${index})">Sửa Tiền</button>
                         <button class="btn-del" onclick="deleteUser(${index})">Xóa</button>
                     </td>
@@ -185,6 +186,15 @@
         if(newName && newName !== users[index].username) {
             users[index].username = newName;
             renderTable();
+        }
+    }
+
+    function editPassword(index) {
+        const newPassword = prompt(`Mật khẩu mới cho ${users[index].username}:`, users[index].password);
+        if(newPassword !== null && newPassword !== "") {
+            users[index].password = newPassword;
+            renderTable();
+            updateStatus(`Đã cập nhật mật khẩu cho ${users[index].username}`);
         }
     }
 
