@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Ngẫu nhiên nhạc nền</title>
+</head>
+<body>
+
+    <audio id="myAudio" loop></audio>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const audio = document.getElementById("myAudio");
+            const playlist = [
+                "xin.mp3",
+                "e.mp3"
+            ];
+            const randomIndex = Math.floor(Math.random() * playlist.length);
+            audio.src = playlist[randomIndex];
+            audio.volume = 0.7;
+            // 4. Hàm xử lý tự động phát
+            const playAudio = () => {
+                audio.play().catch(error => {
+                    console.log("Trình duyệt chặn phát tự động. Đợi tương tác người dùng...");
+                });
+            };
+            playAudio();
+            document.addEventListener('click', () => {
+                playAudio();
+            }, { once: true });
+        });
+    </script>
+
+    <h1>Chào mừng bạn!</h1>
+    <p>Trang web sẽ chọn ngẫu nhiên 1 bài hát để phát lặp lại.</p>
+
+</body>
+</html>
